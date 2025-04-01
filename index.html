@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TikTok Downloader</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1877f2;
+            --secondary: #4267B2;
+            --dark: #121212;
+            --light: #ffffff;
+            --gray: #f1f1f2;
+            --border-radius: 12px;
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #e0f7fa 0%, #80d8ff 100%);
+            color: var(--dark);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .app-wrapper {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            padding: 25px 30px;
+            text-align: center;
+            color: white;
+            position: relative;
+        }
+
+        .logo {
+            font-size: 32px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .logo i {
+            font-size: 38px;
+        }
+
+        .logo-tagline {
+            margin-top: 5px;
+            font-size: 14px;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+
+        .search-box {
+            background: white;
+            padding: 30px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            position: relative;
+        }
+
+        .search-container {
+            position: relative;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .search-container input {
+            width: 100%;
+            padding: 18px 20px;
+            padding-right: 150px;
+            border: 2px solid var(--gray);
+            border-radius: var(--border-radius);
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background-color: var(--gray);
+        }
+
+        .search-container input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(24, 119, 242, 0.2);
+        }
+
+        .search-container button {
+            position: absolute;
+            right: 5px;
+            top: 5px;
+            padding: 13px 25px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(to right, var(--primary), #0d6efd);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .search-container button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(24, 119, 242, 0.3);
+        }
+
+        .example {
+            text-align: center;
+            font-size: 14px;
+            color: #888;
+            margin-top: 12px;
+        }
+
+        .content-area {
+            padding: 30px;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(24, 119, 242, 0.2);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s ease-in-out infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            display: none;
+            text-align: center;
+            background: #e3f2fd;
+            border-left: 4px solid var(--primary);
+            padding: 20px;
+            border-radius: var(--border-radius);
+            margin: 20px 0;
+            color: var(--primary);
+        }
+
+        .result-container {
+            display: none;
+        }
+
+        .video-card {
+            background: white;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
+        }
+
+        .video-info {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
+        }
+
+        @media (min-width: 768px) {
+            .video-info {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .video-preview {
+            width: 100%;
+            aspect-ratio: 9/16;
+            background-color: #000;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+        }
+
+        .video-preview video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .video-details {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .stat-box {
+            background: var(--gray);
+            border-radius: var(--border-radius);
+            padding: 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(to bottom, var(--primary), var(--secondary));
+        }
+
+        .stat-box i {
+            color: var(--primary);
+            font-size: 22px;
+            margin-bottom: 10px;
+        }
+
+        .stat-box .number {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stat-box .label {
+            color: #888;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .hashtags-box {
+            background: var(--gray);
+            border-radius: var(--border-radius);
+            padding: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hashtags-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(to bottom, var(--primary), var(--secondary));
+        }
+
+        .hashtags-box i {
+            color: var(--primary);
+            font-size: 22px;
+            margin-bottom: 10px;
+        }
+
+        .hashtag-wrapper {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .hashtag {
+            background: white;
+            padding: 5px 12px;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--primary);
+        }
+
+        .download-options {
+            background: white;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            padding: 25px;
+        }
+
+        .download-title {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--dark);
+            position: relative;
+            padding-left: 15px;
+        }
+
+        .download-title::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(to bottom, var(--primary), var(--secondary));
+            border-radius: 5px;
+        }
+
+        .download-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .download-btn {
+            background: var(--gray);
+            border: none;
+            border-radius: var(--border-radius);
+            padding: 15px 25px;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--dark);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+            min-width: 150px;
+            justify-content: center;
+        }
+
+        .download-btn i {
+            color: var(--primary);
+            font-size: 20px;
+        }
+
+        .download-btn:hover {
+            background: var(--primary);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(24, 119, 242, 0.3);
+        }
+
+        .download-btn:hover i {
+            color: white;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #888;
+            font-size: 14px;
+            background: white;
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .audio-download {
+            background: linear-gradient(to right, #4267B2, #1877f2);
+        }
+
+        .audio-download i {
+            color: white;
+        }
+
+        .audio-download:hover {
+            background: linear-gradient(to right, #385898, #1464f6);
+        }
+
+        /* Wave Animation */
+        .wave-container {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            overflow: hidden;
+            line-height: 0;
+            z-index: 0;
+        }
+
+        .wave {
+            position: relative;
+            display: block;
+            width: 100%;
+            height: 30px;
+            transform: rotateY(180deg);
+        }
+
+        .wave path {
+            fill: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Apply animations to the waves */
+        @keyframes wave-animation {
+            0% {
+                transform: translateX(0) rotateY(180deg);
+            }
+            100% {
+                transform: translateX(-50%) rotateY(180deg);
+            }
+        }
+
+        .wave-container .wave {
+            animation: wave-animation 15s linear infinite;
+        }
+
+        /* Floating Animation */
+        @keyframes float {
+            0% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+            100% {
+                transform: translateY(0);
+            }
+        }
+
+        .floating {
+            animation: float 4s ease-in-out infinite;
+        }
+
+        /* Pulse Animation for Logo */
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .pulse {
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        /* Media Queries for better responsiveness */
+        @media (max-width: 768px) {
+            .logo {
+                font-size: 28px;
+            }
+
+            .logo i {
+                font-size: 32px;
+            }
+
+            .search-container input {
+                padding: 15px;
+                padding-right: 140px;
+            }
+
+            .search-container button {
+                padding: 10px 20px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .download-btn {
+                flex: 1 0 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .search-container button {
+                position: static;
+                width: 100%;
+                margin-top: 10px;
+                border-radius: var(--border-radius);
+            }
+
+            .search-container input {
+                padding-right: 20px;
+            }
+
+            .content-area {
+                padding: 20px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-wrapper">
+        <header>
+            <div class="logo pulse">
+                <i class="fab fa-tiktok"></i> TikTok Downloader
+            </div>
+            <div class="logo-tagline">Download videos in seconds</div>
+            <div class="wave-container">
+                <svg class="wave" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
+                </svg>
+            </div>
+        </header>
+
+        <div class="search-box">
+            <div class="search-container">
+                <input type="text" id="urlInput" placeholder="Paste TikTok video link here...">
+                <button id="searchBtn">Download Now</button>
+            </div>
+            <div class="example">
+                Example: https://vt.tiktok.com/ZSrreuLGL/
+            </div>
+        </div>
+
+        <div class="content-area">
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Processing your video...</p>
+            </div>
+
+            <div class="error-message" id="errorMessage">
+                <i class="fas fa-exclamation-circle"></i>
+                <p>Oops! We couldn't fetch that video. Please check your URL and try again.</p>
+            </div>
+
+            <div class="result-container" id="resultContainer">
+                <div class="video-card">
+                    <div class="video-info">
+                        <div class="video-preview floating">
+                            <video id="videoPreview" controls></video>
+                        </div>
+                        <div class="video-details">
+                            <div class="stats-grid">
+                                <div class="stat-box">
+                                    <i class="fas fa-heart"></i>
+                                    <div class="number" id="likeCount">0</div>
+                                    <div class="label">Likes</div>
+                                </div>
+                                <div class="stat-box">
+                                    <i class="fas fa-play"></i>
+                                    <div class="number" id="playCount">0</div>
+                                    <div class="label">Views</div>
+                                </div>
+                                <div class="stat-box">
+                                    <i class="fas fa-comment"></i>
+                                    <div class="number" id="commentCount">0</div>
+                                    <div class="label">Comments</div>
+                                </div>
+                                <div class="stat-box">
+                                    <i class="fas fa-share"></i>
+                                    <div class="number" id="shareCount">0</div>
+                                    <div class="label">Shares</div>
+                                </div>
+                            </div>
+                            <div class="hashtags-box" id="hashtagsContainer" style="display: none;">
+                                <i class="fas fa-hashtag"></i>
+                                <div class="hashtag-wrapper" id="hashtags"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="download-options">
+                    <h3 class="download-title">Download Options</h3>
+                    <div class="download-buttons" id="downloadButtons">
+                        <!-- Download buttons will be added here dynamically -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>© 2025 TikTok Downloader - Download TikTok videos without watermark</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlInput = document.getElementById('urlInput');
+            const searchBtn = document.getElementById('searchBtn');
+            const loading = document.getElementById('loading');
+            const resultContainer = document.getElementById('resultContainer');
+            const errorMessage = document.getElementById('errorMessage');
+            const videoPreview = document.getElementById('videoPreview');
+            const likeCount = document.getElementById('likeCount');
+            const playCount = document.getElementById('playCount');
+            const commentCount = document.getElementById('commentCount');
+            const shareCount = document.getElementById('shareCount');
+            const downloadButtons = document.getElementById('downloadButtons');
+            const hashtags = document.getElementById('hashtags');
+            const hashtagsContainer = document.getElementById('hashtagsContainer');
+
+            // Format numbers for display (e.g., 1.2K, 3.5M)
+            function formatNumber(num) {
+                if (num >= 1000000) {
+                    return (num / 1000000).toFixed(1) + 'M';
+                } else if (num >= 1000) {
+                    return (num / 1000).toFixed(1) + 'K';
+                } else {
+                    return num.toString();
+                }
+            }
+
+            // Function to download a file
+            function downloadFile(url, fileName) {
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = fileName || 'tiktok-video';
+                a.target = '_blank';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            }
+
+            // Handle search button click
+            searchBtn.addEventListener('click', function() {
+                const tiktokUrl = urlInput.value.trim();
+                if (!tiktokUrl) {
+                    alert('Please enter a valid TikTok URL');
+                    return;
+                }
+
+                // Show loading, hide previous results and errors
+                loading.style.display = 'block';
+                resultContainer.style.display = 'none';
+                errorMessage.style.display = 'none';
+                
+                // Clear previous downloads
+                downloadButtons.innerHTML = '';
+
+                // Call the API
+                fetch(`https://api.siputzx.my.id/api/tiktok/v2?url=${encodeURIComponent(tiktokUrl)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success && data.data) {
+                            // Hide loading
+                            loading.style.display = 'none';
+                            
+                            // Update video stats
+                            const stats = data.data.metadata.stats;
+                            likeCount.textContent = formatNumber(stats.likeCount);
+                            playCount.textContent = formatNumber(stats.playCount);
+                            commentCount.textContent = formatNumber(stats.commentCount);
+                            shareCount.textContent = formatNumber(stats.shareCount);
+                            
+                            // Handle hashtags if any
+                            if (data.data.metadata.hashtags && data.data.metadata.hashtags.length > 0) {
+                                hashtags.innerHTML = ''; // Clear previous hashtags
+                                data.data.metadata.hashtags.forEach(tag => {
+                                    const hashtagElement = document.createElement('span');
+                                    hashtagElement.className = 'hashtag';
+                                    hashtagElement.textContent = `#${tag}`;
+                                    hashtags.appendChild(hashtagElement);
+                                });
+                                hashtagsContainer.style.display = 'block';
+                            } else {
+                                hashtagsContainer.style.display = 'none';
+                            }
+                            
+                            // Set video preview
+                            if (data.data.download && data.data.download.video && data.data.download.video.length > 0) {
+                                videoPreview.src = data.data.download.video[0];
+                                
+                                // Create download buttons for each quality
+                                data.data.download.video.forEach((url, index) => {
+                                    const btn = document.createElement('button');
+                                    btn.className = 'download-btn';
+                                    
+                                    let quality;
+                                    if (index === 0) quality = 'HD Quality';
+                                    else if (index === 1) quality = 'SD Quality';
+                                    else quality = `Quality ${index + 1}`;
+                                    
+                                    btn.innerHTML = `<i class="fas fa-download"></i> ${quality}`;
+                                    btn.addEventListener('click', () => {
+                                        downloadFile(url, `tiktok-${data.postId || 'video'}-${quality}.mp4`);
+                                    });
+                                    
+                                    downloadButtons.appendChild(btn);
+                                });
+                                
+                                // Add audio download button if available
+                                if (data.data.download.audio && data.data.download.audio.trim() !== " ") {
+                                    const audioBtn = document.createElement('button');
+                                    audioBtn.className = 'download-btn audio-download';
+                                    audioBtn.innerHTML = '<i class="fas fa-music"></i> Audio Track';
+                                    audioBtn.addEventListener('click', () => {
+                                        downloadFile(data.data.download.audio, `tiktok-${data.postId || 'audio'}.mp3`);
+                                    });
+                                    downloadButtons.appendChild(audioBtn);
+                                }
+                            }
+                            
+                            // Show result container
+                            resultContainer.style.display = 'block';
+                        } else {
+                            // Show error
+                            loading.style.display = 'none';
+                            errorMessage.style.display = 'block';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching TikTok data:', error);
+                        loading.style.display = 'none';
+                        errorMessage.style.display = 'block';
+                    });
+            });
+
+            // Allow pressing Enter to submit
+            urlInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    searchBtn.click();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
